@@ -1,6 +1,7 @@
-import {TestClass} from './testClass';
+import {Game} from './game';
 
-document.addEventListener("DOMContentLoaded", () => {
-    const t = new TestClass();
-    t.helloWorld();
+document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('viewport');
+    const game = new Game(canvas);
+    game.initialize();
 });
