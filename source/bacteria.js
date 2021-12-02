@@ -11,20 +11,28 @@ export class Bacteria {
 
     update(game) {
         const {world, events} = game;
+
+        this.updatePosition(world);
+        this.updateDirection();
+
+        events.onTick(() => this.heartBeat(world));
+    }
+
+    updatePosition(world) {
         this.x += Math.sin(this.direction) / 20;
         this.y += Math.cos(this.direction) / 20;
         if (this.x < 0) this.x = 0;
         if (this.y < 0) this.y = 0;
         if (this.x >= world.width - 1) this.x = world.width - 1;
         if (this.y >= world.height - 1) this.y = world.height - 1;
+    }
 
+    updateDirection() {
         const dirChangeChance = Math.random();
         if (dirChangeChance > 0.95)
             this.direction = (Math.random() * 360) * (Math.PI / 180);
         else if (dirChangeChance > 0.5)
             this.direction = this.direction + ((Math.random() - 0.5) * 30) * (Math.PI / 180);
-
-        events.onTick(() => this.heartBeat(world));
     }
 
     heartBeat(world) {
