@@ -10,7 +10,6 @@ export class Bacteria {
         this.lifetime = 1 + Math.ceil(Math.random() * 10);
         this.reproductionAge = 5;
         this.movementNeuron = new RandomMovementNeuron();
-        this.regenerationRate = 0.0001;
         this.poisonConsumed = 0;
         this.maxPoisoning = 6;
         this.generation = generation;
@@ -71,13 +70,12 @@ export class Bacteria {
 
         const location = world.toScreen(game, this.x, this.y);
 
-        const scaleX = world.getScaleX(game);
-        const scaleY = world.getScaleY(game);
+        const scale = world.getScaleX(game);
 
         context.beginPath();
         context.fillStyle = 'black';
         if (this.isSelected) context.fillStyle = 'cyan';
-        context.arc(location.x, location.y, scaleX / 2, 0, 2 * Math.PI);
+        context.arc(location.x, location.y, scale / 2, 0, 2 * Math.PI);
         context.fill();
     }
 }

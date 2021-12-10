@@ -336,7 +336,6 @@ var FPS = /*#__PURE__*/function () {
     _classCallCheck(this, FPS);
 
     this.fps = 0;
-    this.frames = 0;
   }
 
   _createClass(FPS, [{
@@ -344,16 +343,14 @@ var FPS = /*#__PURE__*/function () {
     value: function update(game) {
       var _this = this;
 
-      this.frames += 1;
-      game.events.onTick(function (e) {
+      game.events.onFrame(function (e) {
         return _this.updateFps(e.timeDiff);
       });
     }
   }, {
     key: "updateFps",
     value: function updateFps(timeDiff) {
-      this.fps = Math.ceil(1000 / timeDiff * this.frames);
-      this.frames = 0;
+      this.fps = Math.round(1000 / timeDiff);
     }
   }, {
     key: "render",
@@ -722,7 +719,6 @@ var Bacteria = /*#__PURE__*/function () {
     this.lifetime = 1 + Math.ceil(Math.random() * 10);
     this.reproductionAge = 5;
     this.movementNeuron = new _neurons__WEBPACK_IMPORTED_MODULE_0__.RandomMovementNeuron();
-    this.regenerationRate = 0.0001;
     this.poisonConsumed = 0;
     this.maxPoisoning = 6;
     this.generation = generation;
@@ -799,12 +795,11 @@ var Bacteria = /*#__PURE__*/function () {
       var context = game.context,
           world = game.world;
       var location = world.toScreen(game, this.x, this.y);
-      var scaleX = world.getScaleX(game);
-      var scaleY = world.getScaleY(game);
+      var scale = world.getScaleX(game);
       context.beginPath();
       context.fillStyle = 'black';
       if (this.isSelected) context.fillStyle = 'cyan';
-      context.arc(location.x, location.y, scaleX / 2, 0, 2 * Math.PI);
+      context.arc(location.x, location.y, scale / 2, 0, 2 * Math.PI);
       context.fill();
     }
   }]);
@@ -966,7 +961,7 @@ var StatsDisplay = /*#__PURE__*/function () {
   function StatsDisplay() {
     _classCallCheck(this, StatsDisplay);
 
-    this.left = 2;
+    this.left = 3;
     this.top = 70;
   }
 
@@ -985,7 +980,8 @@ var StatsDisplay = /*#__PURE__*/function () {
         return s.generation;
       });
       context.fillText('Species: ' + game.world.species.length, this.left, top);
-      if (generations.length) context.fillText('Generations: ' + Math.min.apply(Math, _toConsumableArray(generations)) + '-' + Math.max.apply(Math, _toConsumableArray(generations)), this.left, top += 12);
+      context.fillText('Year: ' + game.timer.ticks, this.left, top += 12);
+      if (generations.length) context.fillText("Generations: ".concat(Math.min.apply(Math, _toConsumableArray(generations)), "-").concat(Math.max.apply(Math, _toConsumableArray(generations))), this.left, top += 12);
       var bacteria = game.world.selectedSpecies;
       if (!game.world.selectedSpecies) return;
       context.fillText('Age: ' + bacteria.age, this.left, top += 12);
@@ -1109,6 +1105,7 @@ var Timer = /*#__PURE__*/function () {
 
     this.frameStart = this.tickStart = Date.now();
     this.interval = interval || 100;
+    this.ticks = 0;
   }
 
   _createClass(Timer, [{
@@ -1130,6 +1127,7 @@ var Timer = /*#__PURE__*/function () {
       if (tickTime >= this.interval) {
         game.events.enqueueTickEvent(tickTime);
         this.tickStart = now;
+        this.ticks++;
       }
     }
   }, {

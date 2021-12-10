@@ -1,6 +1,6 @@
 export class StatsDisplay {
     constructor() {
-        this.left = 2;
+        this.left = 3;
         this.top = 70 ;
     }
 
@@ -8,7 +8,6 @@ export class StatsDisplay {
     }
 
     render(game) {
-
         const {context} = game;
         let top = this.top;
 
@@ -19,9 +18,10 @@ export class StatsDisplay {
         const generations = game.world.species.map(s => s.generation);
 
         context.fillText('Species: ' + game.world.species.length, this.left, top);
+        context.fillText('Year: ' + game.timer.ticks, this.left, top += 12);
 
         if (generations.length)
-        context.fillText('Generations: ' + Math.min(...generations) + '-' + Math.max(...generations), this.left, top += 12);
+        context.fillText(`Generations: ${Math.min(...generations)}-${Math.max(...generations)}`, this.left, top += 12);
 
         const bacteria = game.world.selectedSpecies;
         if (!game.world.selectedSpecies) return;

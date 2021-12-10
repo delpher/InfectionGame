@@ -2,6 +2,7 @@ export class Timer {
     constructor(interval) {
         this.frameStart = this.tickStart = Date.now();
         this.interval = interval || 100;
+        this.ticks = 0;
     }
 
     update(game) {
@@ -22,6 +23,7 @@ export class Timer {
         if (tickTime >= this.interval) {
             game.events.enqueueTickEvent(tickTime);
             this.tickStart = now;
+            this.ticks++;
         }
     }
 
