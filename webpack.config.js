@@ -6,6 +6,7 @@ module.exports = {
     filename: 'main.js',
     path: path.resolve(__dirname, 'public/scripts'),
   },
+  devtool: 'source-map',
   mode: 'development',
   module: {
       rules: [
