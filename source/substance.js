@@ -4,12 +4,12 @@ export class Substance {
         this.x = x;
         this.y = y;
         this.area = 0.5;
-        this.spreadRate = 0.01;
-        this.dissolveRate = 0.01;
+        this.spreadRate = 10;
+        this.dissolveRate = 10;
         this.amount = amount;
         this.minAmount = 0.01;
         this.concentrationFactor = this.amount / this.area;
-        this.concentration = this.amount / this.area / this.concentrationFactor;
+        this.concentration = 1;
     }
 
     update(game) {

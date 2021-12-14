@@ -350,7 +350,7 @@ var FPS = /*#__PURE__*/function () {
   }, {
     key: "updateFps",
     value: function updateFps(timeDiff) {
-      this.fps = Math.round(1000 / timeDiff);
+      this.fps = Math.round(1 / timeDiff);
     }
   }, {
     key: "render",
@@ -498,32 +498,13 @@ var MathUtils = /*#__PURE__*/function () {
     key: "dist",
     value: function dist(x1, x2, y1, y2) {
       var dx = x2 - x1;
-      var dy = y2 - y1; //return 1 / Q_rsqrt(dx * dx + dy * dy);
-
+      var dy = y2 - y1;
       return Math.sqrt(dx * dx + dy * dy);
     }
   }]);
 
   return MathUtils;
 }();
-
-function Q_rsqrt(number) {
-  var i;
-  var x2, y;
-  var threehalfs = 1.5;
-  x2 = number * 0.5;
-  y = number;
-  var buf = new ArrayBuffer(4);
-  new Float32Array(buf)[0] = number;
-  i = new Uint32Array(buf)[0];
-  i = 0x5f3759df - (i >> 1); //What the fuck?
-
-  new Uint32Array(buf)[0] = i;
-  y = new Float32Array(buf)[0];
-  y = y * (threehalfs - x2 * y * y); // 1st iteration
-
-  return y;
-}
 
 /***/ }),
 
@@ -718,9 +699,9 @@ var Bacteria = /*#__PURE__*/function () {
     this.isSelected = false;
     this.lifetime = 1 + Math.ceil(Math.random() * 10);
     this.reproductionAge = 5;
-    this.movementNeuron = new _neurons__WEBPACK_IMPORTED_MODULE_0__.RandomMovementNeuron();
+    this.movementNeuron = new _neurons__WEBPACK_IMPORTED_MODULE_0__.RandomMovementNeuron(this);
     this.poisonConsumed = 0;
-    this.maxPoisoning = 6;
+    this.maxPoisoning = 0.1;
     this.generation = generation;
   }
 
@@ -729,12 +710,11 @@ var Bacteria = /*#__PURE__*/function () {
     value: function update(game) {
       var _this = this;
 
-      var world = game.world,
-          events = game.events;
+      var events = game.events;
       events.onFrame(function (e) {
-        _this.updatePosition(world, e.timeDiff);
+        _this.updatePosition(game, e.timeDiff);
 
-        _this.consumeSubstance(game);
+        _this.consumeSubstance(game, e.timeDiff);
       });
       events.onTick(function (e) {
         return _this.heartbeat(game, e.timeDiff);
@@ -747,13 +727,8 @@ var Bacteria = /*#__PURE__*/function () {
     }
   }, {
     key: "updatePosition",
-    value: function updatePosition(world, timeDiff) {
-      var _this$movementNeuron$ = this.movementNeuron.nextPosition(world, this, timeDiff),
-          x = _this$movementNeuron$.x,
-          y = _this$movementNeuron$.y;
-
-      this.x = x;
-      this.y = y;
+    value: function updatePosition(game, timeDiff) {
+      this.movementNeuron.activate(game, timeDiff);
     }
   }, {
     key: "updateAge",
@@ -768,9 +743,9 @@ var Bacteria = /*#__PURE__*/function () {
     }
   }, {
     key: "consumeSubstance",
-    value: function consumeSubstance(game) {
+    value: function consumeSubstance(game, timeDiff) {
       var amount = game.world.fluid.consumeSubstancesAt(game, this.x, this.y);
-      this.poisonConsumed += amount;
+      this.poisonConsumed += amount * timeDiff;
     }
   }, {
     key: "reproduce",
@@ -817,10 +792,13 @@ var Bacteria = /*#__PURE__*/function () {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "RandomMovementNeuron": () => (/* binding */ RandomMovementNeuron),
-/* harmony export */   "LeftMovementNeuron": () => (/* binding */ LeftMovementNeuron)
+/* harmony export */   "RandomMovementNeuron": () => (/* binding */ RandomMovementNeuron)
 /* harmony export */ });
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -838,21 +816,38 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+var OutputNeuron = function OutputNeuron(owner) {
+  _classCallCheck(this, OutputNeuron);
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+  this.owner = owner;
+};
 
-var MovementNeuron = /*#__PURE__*/function () {
-  function MovementNeuron() {
+var MovementNeuron = /*#__PURE__*/function (_OutputNeuron) {
+  _inherits(MovementNeuron, _OutputNeuron);
+
+  var _super = _createSuper(MovementNeuron);
+
+  function MovementNeuron(owner) {
+    var _this;
+
     _classCallCheck(this, MovementNeuron);
 
-    this.speed = 10;
+    _this = _super.call(this, owner);
+    _this.owner = owner;
+    _this.speed = 10;
+    return _this;
   }
 
   _createClass(MovementNeuron, [{
     key: "getDistance",
     value: function getDistance(timeDiff) {
-      return timeDiff / 1000 * this.speed;
+      return timeDiff * this.speed;
+    }
+  }, {
+    key: "moveTo",
+    value: function moveTo(location) {
+      this.owner.x = location.x;
+      this.owner.y = location.y;
     }
   }, {
     key: "restrict",
@@ -869,31 +864,33 @@ var MovementNeuron = /*#__PURE__*/function () {
   }]);
 
   return MovementNeuron;
-}();
+}(OutputNeuron);
 
 var RandomMovementNeuron = /*#__PURE__*/function (_MovementNeuron) {
   _inherits(RandomMovementNeuron, _MovementNeuron);
 
-  var _super = _createSuper(RandomMovementNeuron);
+  var _super2 = _createSuper(RandomMovementNeuron);
 
-  function RandomMovementNeuron() {
-    var _this;
+  function RandomMovementNeuron(owner) {
+    var _this2;
 
     _classCallCheck(this, RandomMovementNeuron);
 
-    _this = _super.call(this);
-    _this.direction = Math.random() * 2 * Math.PI;
-    return _this;
+    _this2 = _super2.call(this, owner);
+    _this2.direction = Math.random() * 2 * Math.PI;
+    return _this2;
   }
 
   _createClass(RandomMovementNeuron, [{
-    key: "nextPosition",
-    value: function nextPosition(world, bacteria, timeDiff) {
+    key: "activate",
+    value: function activate(game, timeDiff) {
+      var world = game.world;
       this.updateDirection();
       var distance = this.getDistance(timeDiff);
-      var x = bacteria.x + Math.cos(this.direction) * distance;
-      var y = bacteria.y + Math.sin(this.direction) * distance;
-      return this.restrict(world, x, y);
+      var x = this.owner.x + Math.cos(this.direction) * distance;
+      var y = this.owner.y + Math.sin(this.direction) * distance;
+      var newLocation = this.restrict(world, x, y);
+      this.moveTo(newLocation);
     }
   }, {
     key: "updateDirection",
@@ -904,27 +901,6 @@ var RandomMovementNeuron = /*#__PURE__*/function (_MovementNeuron) {
   }]);
 
   return RandomMovementNeuron;
-}(MovementNeuron);
-var LeftMovementNeuron = /*#__PURE__*/function (_MovementNeuron2) {
-  _inherits(LeftMovementNeuron, _MovementNeuron2);
-
-  var _super2 = _createSuper(LeftMovementNeuron);
-
-  function LeftMovementNeuron() {
-    _classCallCheck(this, LeftMovementNeuron);
-
-    return _super2.call(this);
-  }
-
-  _createClass(LeftMovementNeuron, [{
-    key: "nextPosition",
-    value: function nextPosition(world, bacteria, timeDiff) {
-      var distance = this.getDistance(timeDiff);
-      return this.restrict(world, bacteria.x - distance, bacteria.y);
-    }
-  }]);
-
-  return LeftMovementNeuron;
 }(MovementNeuron);
 
 /***/ }),
@@ -1019,12 +995,12 @@ var Substance = /*#__PURE__*/function () {
     this.x = x;
     this.y = y;
     this.area = 0.5;
-    this.spreadRate = 0.01;
-    this.dissolveRate = 0.01;
+    this.spreadRate = 10;
+    this.dissolveRate = 10;
     this.amount = amount;
     this.minAmount = 0.01;
     this.concentrationFactor = this.amount / this.area;
-    this.concentration = this.amount / this.area / this.concentrationFactor;
+    this.concentration = 1;
   }
 
   _createClass(Substance, [{
@@ -1104,7 +1080,7 @@ var Timer = /*#__PURE__*/function () {
     _classCallCheck(this, Timer);
 
     this.frameStart = this.tickStart = Date.now();
-    this.interval = interval || 100;
+    this.interval = interval || 0.1;
     this.ticks = 0;
   }
 
@@ -1119,10 +1095,10 @@ var Timer = /*#__PURE__*/function () {
         return;
       }
 
-      var frameTime = now - this.frameStart;
+      var frameTime = (now - this.frameStart) / 1000;
       this.frameStart = now;
       game.events.enqueueFrameEvent(frameTime);
-      var tickTime = now - this.tickStart;
+      var tickTime = (now - this.tickStart) / 1000;
 
       if (tickTime >= this.interval) {
         game.events.enqueueTickEvent(tickTime);

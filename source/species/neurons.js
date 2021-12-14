@@ -1,10 +1,23 @@
-class MovementNeuron {
-    constructor() {
+class OutputNeuron {
+    constructor(owner) {
+        this.owner = owner;
+    }
+}
+
+class MovementNeuron extends OutputNeuron {
+    constructor(owner) {
+        super(owner);
+        this.owner = owner;
         this.speed = 10;
     }
 
     getDistance(timeDiff) {
-        return (timeDiff / 1000) * this.speed
+        return timeDiff * this.speed
+    }
+
+    moveTo(location) {
+        this.owner.x = location.x;
+        this.owner.y = location.y;
     }
 
     restrict(world, x, y) {
@@ -18,37 +31,26 @@ class MovementNeuron {
 
 export class RandomMovementNeuron extends MovementNeuron {
 
-    constructor() {
-        super();
+    constructor(owner) {
+        super(owner);
         this.direction = Math.random() * 2 * Math.PI;
     }
 
-    nextPosition(world, bacteria, timeDiff) {
+    activate(game, timeDiff) {
+        const {world} = game;
         this.updateDirection();
         const distance = this.getDistance(timeDiff);
-        let x = bacteria.x + Math.cos(this.direction) * distance;
-        let y = bacteria.y + Math.sin(this.direction) * distance;
-        return this.restrict(world, x, y);
+        const x = this.owner.x + Math.cos(this.direction) * distance;
+        const y = this.owner.y + Math.sin(this.direction) * distance;
+        const newLocation = this.restrict(world, x, y);
+        this.moveTo(newLocation);
     }
 
     updateDirection() {
         const changeProb = Math.random();
-        
         if (changeProb > 0.95)
             this.direction = Math.random() * 2 * Math.PI;
         else if (changeProb > 0.5)
             this.direction += (Math.random() - 0.5) * Math.PI * 0.2;
-    }
-}
-
-export class LeftMovementNeuron extends MovementNeuron {
-
-    constructor() {
-        super();
-    }
-
-    nextPosition(world, bacteria, timeDiff) {
-        const distance = this.getDistance(timeDiff);
-        return this.restrict(world, bacteria.x - distance, bacteria.y);
     }
 }

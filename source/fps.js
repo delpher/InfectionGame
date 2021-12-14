@@ -9,7 +9,7 @@ export class FPS {
     }   
 
     updateFps(timeDiff) {
-        this.fps = Math.round(1000 / timeDiff);
+        this.fps = Math.round(1 / timeDiff);
     }
 
     render(game) {

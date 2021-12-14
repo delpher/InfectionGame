@@ -1,4 +1,4 @@
-import {RandomMovementNeuron, LeftMovementNeuron} from './neurons';
+import {RandomMovementNeuron} from './neurons';
 
 export class Bacteria {
 
@@ -9,18 +9,18 @@ export class Bacteria {
         this.isSelected = false;
         this.lifetime = 1 + Math.ceil(Math.random() * 10);
         this.reproductionAge = 5;
-        this.movementNeuron = new RandomMovementNeuron();
+        this.movementNeuron = new RandomMovementNeuron(this);
         this.poisonConsumed = 0;
-        this.maxPoisoning = 6;
+        this.maxPoisoning = 0.1;
         this.generation = generation;
     }
 
     update(game) {
-        const {world, events} = game;
+        const {events} = game;
 
         events.onFrame((e) => { 
-            this.updatePosition(world, e.timeDiff); 
-            this.consumeSubstance(game);
+            this.updatePosition(game, e.timeDiff); 
+            this.consumeSubstance(game, e.timeDiff);
         });
 
         events.onTick((e) => this.heartbeat(game, e.timeDiff));
@@ -30,10 +30,8 @@ export class Bacteria {
         this.updateAge(game.world);
     }
     
-    updatePosition(world, timeDiff) {
-        const {x, y} = this.movementNeuron.nextPosition(world, this, timeDiff);
-        this.x = x;
-        this.y = y;
+    updatePosition(game, timeDiff) {
+        this.movementNeuron.activate(game, timeDiff);
     }
 
     updateAge(world) {
@@ -45,9 +43,9 @@ export class Bacteria {
         }
     }
 
-    consumeSubstance(game) {
+    consumeSubstance(game, timeDiff) {
         const amount = game.world.fluid.consumeSubstancesAt(game, this.x, this.y);
-        this.poisonConsumed += amount;
+        this.poisonConsumed += amount * timeDiff;
     }
 
     reproduce(world) {
